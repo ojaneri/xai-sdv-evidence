@@ -1,0 +1,66 @@
+{
+ "fabrication": [
+  {
+   "capture": "max_speedometer_attack_3",
+   "target_id": "0xd0",
+   "frames_in_window": 12214,
+   "forged": 6107,
+   "forged_frac": 0.5,
+   "pairs": 12213,
+   "alternating_pairs": 12213,
+   "alternation": 1.0
+  },
+  {
+   "capture": "reverse_light_off_attack_3",
+   "target_id": "0xd0",
+   "frames_in_window": 4868,
+   "forged": 2434,
+   "forged_frac": 0.5,
+   "pairs": 4867,
+   "alternating_pairs": 4867,
+   "alternation": 1.0
+  },
+  {
+   "capture": "reverse_light_on_attack_3",
+   "target_id": "0xd0",
+   "frames_in_window": 4701,
+   "forged": 2350,
+   "forged_frac": 0.49989363965113803,
+   "pairs": 4700,
+   "alternating_pairs": 4700,
+   "alternation": 1.0
+  }
+ ],
+ "masquerade": [
+  {
+   "capture": "max_speedometer_attack_3_masquerade",
+   "target_id": "0xd0",
+   "frames_in_window": 6107,
+   "forged": 6107,
+   "forged_frac": 1.0,
+   "pairs": 6106,
+   "alternating_pairs": 0,
+   "alternation": 0.0
+  },
+  {
+   "capture": "reverse_light_off_attack_3_masquerade",
+   "target_id": "0xd0",
+   "frames_in_window": 2434,
+   "forged": 2434,
+   "forged_frac": 1.0,
+   "pairs": 2433,
+   "alternating_pairs": 0,
+   "alternation": 0.0
+  },
+  {
+   "capture": "reverse_light_on_attack_3_masquerade",
+   "target_id": "0xd0",
+   "frames_in_window": 2350,
+   "forged": 2350,
+   "forged_frac": 1.0,
+   "pairs": 2349,
+   "alternating_pairs": 0,
+   "alternation": 0.0
+  }
+ ]
+}

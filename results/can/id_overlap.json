@@ -1,0 +1,10 @@
+{
+ "road_ambient_ids": 106,
+ "hcrl_normal_ids": 27,
+ "shared_ids": 3,
+ "shared": [
+  "0x130",
+  "0x153",
+  "0x430"
+ ]
+}

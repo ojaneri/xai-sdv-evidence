@@ -1,0 +1,17 @@
+# datasets (downloaded, never committed)
+data/
+*.zip
+*.h5
+*.hdf5
+
+# environments and caches
+.venv/
+venv/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# generated
+out/
+build/
+src/mcu/model.h

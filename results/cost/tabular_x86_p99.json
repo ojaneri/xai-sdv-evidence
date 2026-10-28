@@ -1,0 +1,9 @@
+{
+ "note": "p99 latency (ms) of the tabular methods on x86 EPYC, single-threaded, as recorded in the lab notebook for the run whose p99 is reported in the paper. The per-run JSON files written by cost.xai_cost for the four x86 runs were not preserved; their medians are in tabular_canonical.json. KernelSHAP and LIME were timed five times per run, so their p99 is the slowest of one run.",
+ "p99_ms": {
+  "inference only (no XAI)": 0.46,
+  "SHAP (Tree, exact)": 0.98,
+  "LIME": 71.4,
+  "SHAP (Kernel, model-agnostic)": 622
+ }
+}

@@ -1,6 +1,6 @@
 # What Explanations Cost and When They Fail: code and data
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23749400.svg)](https://doi.org/10.5281/zenodo.23749400)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23749399.svg)](https://doi.org/10.5281/zenodo.23749399)
 
 This repository reproduces the measurements of the paper *What Explanations
 Cost and When They Fail: Measuring XAI Evidence for Software-Defined Vehicles*.

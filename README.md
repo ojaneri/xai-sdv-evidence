@@ -13,6 +13,11 @@ collapses from F1 1.000 to 0.000 when the attack modality changes and does not
 transfer between vehicles (ROAD and HCRL), while explanation drift and other
 label-free drift metrics do not flag the collapse.
 
+The cost measurements of the tabular regime (`src/cost/xai_cost.py`, `src/mcu/`)
+use an XGBoost model (200 trees, depth 6) trained on 24 synthetic features from
+`sklearn.datasets.make_classification`, sized like a CAN IDS. It is not the CAN
+detector of `src/can_ids/`, which uses 16 features computed from real frames.
+
 ## Requirements
 
 - Python 3.12 and the packages in `requirements.txt` (CPU-only PyTorch is enough).
@@ -37,12 +42,9 @@ make tables PY=.venv/bin/python    # print every table and figure from results/,
 make verify PY=.venv/bin/python    # compare them with the numbers printed in the paper
 ```
 
-`make verify` compares 347 values (every table cell and figure coordinate, and
+`make verify` compares 330 values (every table cell and figure coordinate, and
 the numbers quoted in the text) and ends with
-`343 values match the paper, 4 noted presentation differences, 0 mismatches`.
-The four notes are rounding choices in the paper and are printed with their
-reason (for example, two retrainings give window F1 0.6666 and 0.6665, which the
-paper prints as 0.666).
+`330 values match the paper, 0 noted presentation differences, 0 mismatches`.
 
 ## Paper item to command, script and result
 
@@ -56,13 +58,12 @@ is what produced the result file; its `make` target re-runs it (tier 2 or 3).
 | Figure: prediction error of the cost model | `fig_cost_model` | `src/cost/validate_model.py` (`cost-model`) | `results/cost/model_validation.json` |
 | Table: The same explanation on four processors | `tab_platforms` | as above; `src/cost/run_on_arm.sh` (ARM); `src/mcu/analyze.py` (MCUs) | `results/cost/tabular_canonical.json`, `results/cost/arm-neoverse-v1/tabular_c7g.json`, `results/mcu/xai-nrf52840-r1/analysis.json`, `results/mcu/xai-nucleo-l476rg/analysis.json` |
 | Section Cost of evidence, text: CAN budgets (10 ms per ID, 0.42/0.51 ms mean gap, 0.23 ms peak) | claims `bus.*`, `cost.*` | `src/cost/bus_budget.py` (`bus-budget`) | `results/cost/bus_budget.json` |
-| Section Cost of evidence, text: ARM portability (latency moves 11-20%, pass counts identical, 3.5% / 7.0% prediction error) | claims `arm.*` | `src/cost/run_on_arm.sh` | `results/cost/arm-neoverse-v1/`, `results/cost/arm-neoverse-n1/` |
-| Section Cost of evidence, text: batch effect of IG (22-39%, x86 -42.5% vs ARM +7.0%), Grad-CAM n=400 | claims `x86.*`, `cost.gradcam_*` | `src/cost/ig_overhead.py` (`cost-ig`), `src/cost/validate_model.py`, `src/cost/xai_cost_vision.py` | `results/cost/ig_overhead.json`, `model_validation.json`, `vision_n400.json` |
+| Section Cost of evidence, text: ARM portability (latency moves 12-20%, pass counts identical, 3.5% / 7.0% prediction error) | claims `arm.*` | `src/cost/run_on_arm.sh` | `results/cost/arm-neoverse-v1/`, `results/cost/arm-neoverse-n1/` |
+| Section Cost of evidence, text: batch effect of IG (20-39%, x86 +42.5% vs ARM -7.0%, measured minus predicted), Grad-CAM n=400 | claims `x86.*`, `cost.gradcam_*` | `src/cost/ig_overhead.py` (`cost-ig`), `src/cost/validate_model.py`, `src/cost/xai_cost_vision.py` | `results/cost/ig_overhead.json`, `model_validation.json`, `vision_n400.json` |
 | Section On microcontroller silicon, text (TreeSHAP 166 ms / 520 ms, Eq. (1) errors, energy, determinism) | claims `mcu.*` | `src/mcu/xai_fw.c` on the boards, `src/mcu/analyze.py` (`mcu-analyze`) | `results/mcu/*/analysis.json`, console logs, `results/mcu/ref.json` |
 | Table: Held-out transfer across attack modality | `tab_collapse` | `src/can_ids/collapse_full.py` (`can-collapse`), `drift_experiment.py` (`can-drift`), `label_stats.py` (`can-labels`) | `results/can/collapse_full.json`, `drift.json`, `label_stats.json` |
 | Figure: held-out transfer by CAN ID | `fig_collapse` | `src/can_ids/collapse_full.py` | `results/can/collapse_full.json` |
-| Figure: SHAP attribution mass per feature | `fig_attribution` | `src/can_ids/drift_experiment.py` | `results/can/drift.json` |
-| Section Evidence under attack-modality shift, text (2 of 20,895 flagged, F1 0.966 trained on masquerade, blindness margin -0.644) | claims `can.*` | `src/can_ids/sanity_masq.py` (`can-sanity`), `blindness_check.py` (`can-blindness`) | `results/can/sanity_masq.json`, `blindness.json` |
+| Section Explanation evidence under shift, text (2 of 20,895 flagged, F1 0.966 trained on masquerade) | claims `can.*` | `src/can_ids/sanity_masq.py` (`can-sanity`) | `results/can/sanity_masq.json` |
 | Table: Transfer across vehicle and attack modality | `tab_transfer` | `src/can_ids/cross_vehicle.py` (`can-cross-vehicle`), `cross_family.py` (`can-cross-family`), `drift_experiment.py` | `results/can/cross_vehicle.json`, `cross_vehicle.log`, `cross_family.json`, `drift.json` |
 | Section Explanation evidence under shift, text: CAN IDs shared by the two vehicles (3 of 27 and 106) | none (tier 2 only) | `src/can_ids/id_overlap.py` (`can-ids`) | `results/can/id_overlap.json` |
 | Table: Label-free drift metrics | `tab_driftmetrics` | `src/can_ids/drift_metrics.py` (`can-drift-metrics`) | `results/can/drift_metrics.json`, `drift_metrics_ambient_ref.json` |
@@ -117,9 +118,9 @@ to an hour or more each; the cost targets take minutes to tens of minutes.
   repeats the cost bench on a remote ARM host. Use a host with dedicated cores.
 
 Prevalence and labels: ROAD supplies the injected payload as a byte mask, and
-every CAN experiment labels frames individually from it. The window label used
-by most published work (every frame in the injection interval is an attack) is
-50% benign under fabrication (`results/can/label_stats.json`); it is reported
+every CAN experiment labels frames individually from it. The interval-level window label
+(every frame in the injection interval is an attack) is
+50% benign among target-ID frames under fabrication (`results/can/label_stats.json`); it is reported
 alongside for comparison.
 
 ## Tier 3: microcontrollers (optional)

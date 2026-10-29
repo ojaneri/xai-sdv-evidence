@@ -181,6 +181,10 @@ def cost_claims():
     src = 'results/cost/vision_n400.json'
     claim('cost.gradcam_n400_median', 'Grad-CAM median, n=400 run', n400['Grad-CAM']['median_ms'], src, 'ms')
     claim('cost.gradcam_n400_p99', 'Grad-CAM p99, n=400 run', n400['Grad-CAM']['p99_ms'], src, 'ms')
+    gcb = load(COST_RESULTS / 'gradcam_boundary.json')
+    claim('cost.gradcam_warm_median', 'Grad-CAM median, n=400 run with 50 warm-ups', gcb['median'], 'results/cost/gradcam_boundary.json', 'ms')
+    claim('cost.gradcam_warm_p99', 'Grad-CAM p99, n=400 run with 50 warm-ups', gcb['p99'], 'results/cost/gradcam_boundary.json', 'ms')
+    claim('cost.inference_n400_median', 'inference median, n=400 run', n400['inference only (no XAI)']['median_ms'], src, 'ms')
 
     mv = load(COST_RESULTS / 'model_validation.json')['rows']
     arm_mv = load(COST_RESULTS / 'arm-neoverse-v1/model_validation.json')['rows']
@@ -198,7 +202,7 @@ def cost_claims():
     ig = {r['param']: r for r in mv if r['family'] == 'integrated_gradients'}
     g1 = 100 * ((ig[50]['measured_ms'] / 50) / (ig[5]['measured_ms'] / 5) - 1)
     ov = {r['n_steps']: r for r in load(COST_RESULTS / 'ig_overhead.json')}
-    g2 = 100 * ((ov[50]['pure_passes_ms'] / 50) / (ov[5]['pure_passes_ms'] / 5) - 1)
+    g2 = 100 * ((ov[50]['ig_ms'] / 50) / (ov[5]['ig_ms'] / 5) - 1)  # integrated gradients itself
     claim('x86.ig_batch_growth_min', 'per-pass cost growth N=5 -> 50 with gradients, lower (ig_overhead.json)',
           min(g1, g2), 'results/cost/ig_overhead.json, model_validation.json', '%')
     claim('x86.ig_batch_growth_max', 'per-pass cost growth N=5 -> 50 with gradients, upper (model_validation.json)',
@@ -278,8 +282,8 @@ def tab_collapse():
                         / sum(r['pairs'] for r in ls[kind]))
     rows = [
         ['Same CAN ID as training', str(len(same)), f3(med(same, 'fab')), f3(med(same, 'mas'))],
+        ['single-threshold rule, same ID', '', f3(drift['baseline_one_rule']['fab']), f3(drift['baseline_one_rule']['mas'])],
         ['CAN ID never seen', str(len(new)), f3(med(new, 'fab')), f3(med(new, 'mas'))],
-        ['single-threshold rule', '', f3(drift['baseline_one_rule']['fab']), f3(drift['baseline_one_rule']['mas'])],
         ['on bytes_changed', '', pct(attr[feats.index('bytes_changed')]), ''],
         ['on payload features, total', '', pct(1 - drift['timing_mass']['fab']), ''],
         ['label alternation between frames', '', pct(alt('fabrication'), 0), pct(alt('masquerade'), 0)],
@@ -353,10 +357,10 @@ def tab_transfer():
             a, b = x['train'].split()[0], x['test'].split()[0]
             rows.append([f"{x['family'].capitalize()}: {a} -> {b}", '!=', '='] + r(x))
     tm = cv['timing_mass']
-    rows.append(['trained on HCRL: timing / id_count_win / bytes_changed', '', '',
-                 pct(tm['hcrl_model']), f"{imp['HCRL']['id_count_win']}%", f"{imp['HCRL']['bytes_changed']}%"])
-    rows.append(['trained on ROAD: timing / id_count_win / bytes_changed', '', '',
-                 pct(tm['road_model']), f"{imp['ROAD']['id_count_win']}%", f"{imp['ROAD']['bytes_changed']}%"])
+    src = 'results/can/cross_vehicle.json, results/can/cross_vehicle.log'
+    claim('can.timing_hcrl_model', 'gain importance on timing, HCRL-trained model', 100 * tm['hcrl_model'], src, '%')
+    claim('can.bytes_changed_road_model', 'gain importance on bytes_changed, ROAD-trained model',
+          float(imp['ROAD']['bytes_changed']), src, '%')
     return ['Train -> test', 'Veh.', 'Mod.', 'F1', 'Recall', 'FPR'], rows
 
 
@@ -418,11 +422,14 @@ METRICS = [('agg_l1', 'Aggregate L1'), ('rank_tau', 'Rank distance (1 - tau)'),
 def tab_driftmetrics():
     t = load(CAN_RESULTS / 'drift_metrics.json')['summary']
     a = load(CAN_RESULTS / 'drift_metrics_ambient_ref.json')['summary']
-    rows = [[label, f3(max(t[k]['null'])), f3(max(t[k]['ambient'])), f3(min(t[k]['target'])),
-             f3(max(a[k]['ambient'])), f3(max(a[k]['target'])), f3(min(a[k]['null']))]
+    span = lambda v: f"{f3(min(v))}-{f3(max(v))}"
+    # AUROC of collapse captures against benign captures (ties count one half)
+    auroc = lambda x: f"{sum((c > b) + 0.5 * (c == b) for c in x['target'] for b in x['ambient']) / (len(x['target']) * len(x['ambient'])):.2f}"
+    rows = [[label, f3(max(t[k]['null'])), span(t[k]['ambient']), span(t[k]['target']), auroc(t[k]),
+             span(a[k]['ambient']), span(a[k]['target']), auroc(a[k])]
             for k, label in METRICS]
-    return ['Metric', 'Train ref: new fabr. (max)', 'benign (max)', 'collapse (min)',
-            'Benign ref: benign (max)', 'collapse (max)', 'fabr. (min)'], rows
+    return ['Metric', 'Train ref: new fabr. (max)', 'benign', 'collapse', 'AUROC',
+            'Benign ref: benign', 'collapse', 'AUROC'], rows
 
 
 @table('tab_ota', 'Table: explanation drift between model versions',

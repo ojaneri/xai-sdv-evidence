@@ -384,6 +384,26 @@ def can_claims():
     feats = drift['feats']
     claim('can.bytes_changed_fab', 'bytes_changed share, fabrication', 100 * drift['attr_fab'][feats.index('bytes_changed')], src, '%')
     claim('can.bytes_changed_mas', 'bytes_changed share, masquerade', 100 * drift['attr_mas'][feats.index('bytes_changed')], src, '%')
+    # IG paired overhead ratios (IG ms / pure-pass ms at each step count)
+    ig_ov = load(COST_RESULTS / 'ig_overhead.json')
+    src_ig = 'results/cost/ig_overhead.json'
+    for entry in ig_ov:
+        n = entry['n_steps']
+        claim(f'cost.ig_ratio_{n}', f'IG/pure-pass ratio at {n} steps', entry['ratio'], src_ig)
+
+    # Per-frame vs window label verdicts on same-ID held-out captures
+    cf = load(CAN_RESULTS / 'collapse_full.json')
+    src_cf = 'results/can/collapse_full.json'
+    for kind in ('precise', 'window'):
+        rows = cf[kind]['rows']
+        for r in rows:
+            if not r['train'] and r['same_id']:
+                tag = kind[:3]  # 'pre' or 'win'
+                claim(f'can.{tag}_fab_{r["id"]}_{r["base"]}',
+                      f'{kind} F1 fabrication {r["id"]} {r["base"]}', r['fab'], src_cf)
+                claim(f'can.{tag}_mas_{r["id"]}_{r["base"]}',
+                      f'{kind} F1 masquerade {r["id"]} {r["base"]}', r['mas'], src_cf)
+
     claim('can.blindness_margin', 'structural-blindness margin, ambient reference',
           load(CAN_RESULTS / 'blindness.json')['margin'], 'results/can/blindness.json')
     _, prev = importance_from_log()

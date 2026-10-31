@@ -168,6 +168,25 @@ EXPECTED_CLAIMS = {
     'can.mmd_collapse_max_benignref': (0.086, 0.0005),
     'can.mmd_fab_min_benignref': (0.265, 0.0005),
     'can.mmd_fab_max_benignref': (0.499, 0.0005),
+    # IG paired overhead ratios
+    'cost.ig_ratio_5': (1.026, 0.0005),
+    'cost.ig_ratio_10': (0.976, 0.0005),
+    'cost.ig_ratio_20': (1.000, 0.0005),
+    'cost.ig_ratio_50': (0.993, 0.0005),
+    # Per-frame label verdicts on same-ID held-out captures
+    'can.pre_fab_0xd0_max_speedometer_attack_3': (1.000, 0.0005),
+    'can.pre_mas_0xd0_max_speedometer_attack_3': (0.000, 0.0005),
+    'can.pre_fab_0xd0_reverse_light_off_attack_3': (1.000, 0.0005),
+    'can.pre_mas_0xd0_reverse_light_off_attack_3': (0.001, 0.0005),
+    'can.pre_fab_0xd0_reverse_light_on_attack_3': (1.000, 0.0005),
+    'can.pre_mas_0xd0_reverse_light_on_attack_3': (0.000, 0.0005),
+    # Window label verdicts on same-ID held-out captures
+    'can.win_fab_0xd0_max_speedometer_attack_3': (1.000, 0.0005),
+    'can.win_mas_0xd0_max_speedometer_attack_3': (0.000, 0.0005),
+    'can.win_fab_0xd0_reverse_light_off_attack_3': (0.998, 0.0005),
+    'can.win_mas_0xd0_reverse_light_off_attack_3': (0.000, 0.0005),
+    'can.win_fab_0xd0_reverse_light_on_attack_3': (0.998, 0.0005),
+    'can.win_mas_0xd0_reverse_light_on_attack_3': (0.000, 0.0005),
 }
 
 # Differences that are presentation choices in the paper, not reproduction
